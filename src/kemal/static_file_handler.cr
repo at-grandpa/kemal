@@ -58,11 +58,13 @@ module Kemal
         File.open(file_path) do |file|
           if request_headers.includes_word?("Accept-Encoding", "gzip") && config.is_a?(Hash) && config["gzip"] == true && filesize > minsize && self.zip_types(file_path)
             context.response.headers["Content-Encoding"] = "gzip"
+            context.response.content_length = filesize
             Zlib::Deflate.gzip(context.response) do |deflate|
               IO.copy(file, deflate)
             end
           elsif request_headers.includes_word?("Accept-Encoding", "deflate") && config.is_a?(Hash) && config["gzip"]? == true && filesize > minsize && self.zip_types(file_path)
             context.response.headers["Content-Encoding"] = "deflate"
+            context.response.content_length = filesize
             Zlib::Deflate.new(context.response) do |deflate|
               IO.copy(file, deflate)
             end
