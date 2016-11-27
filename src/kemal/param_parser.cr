@@ -5,11 +5,11 @@ module Kemal
   # ParamParser parses the request contents including query_params and body
   # and converts them into a params hash which you can within the environment
   # context.
-  alias AllParamTypes = Nil | String | Int64 | Float64 | Bool | Hash(String, JSON::Type) | Array(JSON::Type)
-
   class ParamParser
     URL_ENCODED_FORM = "application/x-www-form-urlencoded"
     APPLICATION_JSON = "application/json"
+    # :nodoc:
+    alias AllParamTypes = Nil | String | Int64 | Float64 | Bool | Hash(String, JSON::Type) | Array(JSON::Type)
 
     def initialize(@request : HTTP::Request)
       @url = {} of String => String
@@ -64,7 +64,7 @@ module Kemal
     def parse_json
       return unless @request.body && @request.headers["Content-Type"]?.try(&.starts_with?(APPLICATION_JSON))
 
-      body = @request.body.as(String)
+      body = @request.body.not_nil!.gets_to_end
       case json = JSON.parse(body).raw
       when Hash
         json.each do |key, value|
@@ -75,8 +75,20 @@ module Kemal
       end
     end
 
-    def parse_part(part)
-      HTTP::Params.parse(part || "")
+    def parse_part(part : IO?)
+      if part
+        HTTP::Params.parse(part.gets_to_end)
+      else
+        HTTP::Params.parse("")
+      end
+    end
+
+    def parse_part(part : String?)
+      if part
+        HTTP::Params.parse(part.to_s)
+      else
+        HTTP::Params.parse("")
+      end
     end
   end
 end

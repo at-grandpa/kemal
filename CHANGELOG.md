@@ -1,4 +1,13 @@
-# Next
+# 0.17.2 (25-11-2016)
+
+- Use body.gets_to_end for parse_json. Fixes #260.
+- Update Radix to 0.3.5 and lock pessimistically. (thanks @luislavena)
+
+# 0.17.1 (24-11-2016)
+
+- Treat `HTTP::Request` body as an `IO`. Fixes [#257](https://github.com/sdogruyol/kemal/issues/257)
+
+# 0.17.0 (23-11-2016)
 
 - Reimplemented Request middleware / filter routing. 
 
@@ -11,6 +20,48 @@ Request -> Middleware -> Filter -> Route
 ```
 
 - Rename `return_with` as `halt`.
+- Route declaration must start with `/`.  Fixes [#242](https://github.com/sdogruyol/kemal/issues/242)
+- Set default exception Content-Type to text/html. Fixes [#202](https://github.com/sdogruyol/kemal/issues/242)
+- Add `only` and `exclude` paths for `Kemal::Handler`. This change requires that all handlers must inherit from `Kemal::Handler`. 
+
+For example this handler will only work on `/` path. By default the HTTP method is `GET`.
+
+
+```crystal
+class OnlyHandler < Kemal::Handler
+  only ["/"]
+  
+  def call(env)
+    return call_next(env) unless only_match?(env)
+    puts "If the path is / i will be doing some processing here."
+  end
+end
+```
+
+The handlers using `exclude` will work on the paths that isn't specified. For example this handler will work on any routes other than `/`.
+
+```crystal
+class ExcludeHandler < Kemal::Handler
+  exclude ["/"]
+  
+  def call(env)
+    return call_next(env) unless only_match?(env)
+    puts "If the path is NOT / i will be doing some processing here."
+  end
+end
+```
+
+- Close response on `halt`. (thanks @samueleaton).
+- Update `Radix` to `v0.3.4`.
+- `error` handler now also yields error. For example you can get the error mesasage like
+
+```crystal
+  error 500 do |env, err|
+    err.message
+  end
+```
+
+- Update `multipart.cr` to `v0.1.1`
 
 # 0.16.1 (12-10-2016)
 
@@ -41,7 +92,7 @@ post "/upload" do |env|
     "Upload complete"
   end
 end
-  ```
+```
 
 - Make session configurable. Now you can specify session name and expire time wit
 
